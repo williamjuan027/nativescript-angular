@@ -13,11 +13,13 @@ import {
 
 import { AppModule } from "./app.module";
 
+import { LottieView } from 'nativescript-lottie';
+
 setCategories(animationsTraceCategory);
 enable();
 
 class LaunchAnimation extends GridLayout {
-  circle: GridLayout;
+  lottieView: LottieView;
   animatedContainer: GridLayout;
   finished = false;
 
@@ -31,18 +33,19 @@ class LaunchAnimation extends GridLayout {
     this.animatedContainer.className = 'w-full h-full';
 
     // any creative animation can be put inside
-    this.circle = new GridLayout();
-    this.circle.width = 30;
-    this.circle.height = 30;
-    this.circle.borderRadius = 15;
-    this.circle.horizontalAlignment = HorizontalAlignment.center;
-    this.circle.verticalAlignment = VerticalAlignment.center;
-    this.circle.backgroundColor = '#fff';
     this.animatedContainer.addRow(new ItemSpec(1, GridUnitType.STAR));
     this.animatedContainer.addRow(new ItemSpec(1, GridUnitType.AUTO));
     this.animatedContainer.addRow(new ItemSpec(1, GridUnitType.STAR));
-    GridLayout.setRow(this.circle, 1);
-    this.animatedContainer.addChild(this.circle);
+
+    this.lottieView = new LottieView();
+    this.lottieView.height = 300;
+    this.lottieView.width = 300;
+    this.lottieView.autoPlay = false;
+    this.lottieView.loop = false;
+    this.lottieView.src = 'lottie/pinjump.json';
+
+    GridLayout.setRow(this.lottieView, 1);
+    this.animatedContainer.addChild(this.lottieView);
 
     // add animation to top row since booted app will insert into bottom row
     GridLayout.setRow(this.animatedContainer, 1);
@@ -50,33 +53,8 @@ class LaunchAnimation extends GridLayout {
   }
 
   startAnimation() {
-    this.circle
-      .animate({
-        scale: { x: 2, y: 2 },
-        duration: 800,
-      })
-      .then(() => {
-        this.circle
-          .animate({
-            scale: { x: 1, y: 1 },
-            duration: 800,
-          })
-          .then(() => {
-            if (this.finished) {
-              this.circle
-                .animate({
-                  scale: { x: 30, y: 30 },
-                  duration: 400,
-                })
-                .then(() => {
-                  this.fadeOut();
-                });
-            } else {
-              // keep looping
-              this.startAnimation();
-            }
-          });
-      });
+    this.lottieView.completionBlock = () => this.finished ? this.fadeOut() : this.startAnimation();
+    this.lottieView.playAnimation();
   }
 
   cleanup() {
@@ -92,12 +70,12 @@ class LaunchAnimation extends GridLayout {
       .then(() => {
         this._removeView(this.animatedContainer);
         this.animatedContainer = null;
-        this.circle = null;
+        this.lottieView = null;
       });
   }
+
 }
 
 platformNativeScriptDynamic({
   launchView: new LaunchAnimation(),
-  // backgroundColor: 'purple'
 }).bootstrapModule(AppModule);
